@@ -1,6 +1,11 @@
 package org.infinispan.tutorial.services.temperature;
 
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.annotation.ClientCacheEntryCreated;
+import org.infinispan.client.hotrod.annotation.ClientCacheEntryExpired;
+import org.infinispan.client.hotrod.annotation.ClientListener;
+import org.infinispan.client.hotrod.event.ClientCacheEntryCreatedEvent;
+import org.infinispan.client.hotrod.event.ClientCacheEntryExpiredEvent;
 import org.infinispan.tutorial.db.DataSourceConnector;
 
 import java.util.Objects;
@@ -18,6 +23,7 @@ public class TemperatureMonitor {
       return cache.get(location);
    }
 
+   @ClientListener
    public class TemperatureChangesListener {
       private String location;
 
@@ -26,6 +32,28 @@ public class TemperatureMonitor {
       }
 
       // STEP Implement a Client Listener sub-steps 1-2-3
+      @ClientCacheEntryCreated
+      public void created(ClientCacheEntryCreatedEvent event) {
+         System.out.println("inside listener : " + event.getKey());
+         if (event.getKey().equals(location)) {
+            cache.getAsync(location)
+                    .whenComplete((temperature, ex) -> {
+                       System.out.printf("location %s Temperature %s\n", location, temperature);
+            });
+         }
+      }
+
+      @ClientCacheEntryExpired
+      public void expired(ClientCacheEntryExpiredEvent event) {
+         System.out.println("inside listener : " + event.getKey());
+         if (event.getKey().equals(location)) {
+            cache.getAsync(location)
+                    .whenComplete((temperature, ex) -> {
+                       System.out.printf("location %s Temperature %s\n", location, temperature);
+            });
+         }
+      }
+
    }
 
    /**
@@ -38,6 +66,8 @@ public class TemperatureMonitor {
       TemperatureChangesListener temperatureChangesListener = new TemperatureChangesListener(location);
 
       // STEP Implement a Client Listener - sub-step 4
+      cache.addClientListener(temperatureChangesListener);
+      cache.addClientListener(new TempListener());
    }
 
 }
