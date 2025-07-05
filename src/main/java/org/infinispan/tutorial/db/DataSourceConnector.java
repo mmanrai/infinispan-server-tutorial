@@ -2,6 +2,7 @@ package org.infinispan.tutorial.db;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.tutorial.data.LocationWeather;
 
 import java.util.Objects;
@@ -25,7 +26,9 @@ public class DataSourceConnector {
     // STEP Implement the connection
     public void connect() {
         System.out.println("---- Connect to Infinispan ----");
-
+        ConfigurationBuilder builder = new ConfigurationBuilder();
+        builder.uri("hotrod://admin:password@localhost:11222");
+        remoteCacheManager = new RemoteCacheManager(builder.build());
     }
 
     public void health() {
