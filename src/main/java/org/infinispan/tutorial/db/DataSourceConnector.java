@@ -5,6 +5,8 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.tutorial.data.LocationWeather;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Objects;
 
 /**
@@ -28,7 +30,17 @@ public class DataSourceConnector {
         System.out.println("---- Connect to Infinispan ----");
         ConfigurationBuilder builder = new ConfigurationBuilder();
         builder.uri("hotrod://admin:password@localhost:11222");
+
+        URI temperatureCacheConfig;
+        try {
+            temperatureCacheConfig = getClass().getClassLoader().getResource("temperatureCacheConfig.xml").toURI();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
+        builder.remoteCache("temperature").configurationURI(temperatureCacheConfig);
         remoteCacheManager = new RemoteCacheManager(builder.build());
+
     }
 
     public void health() {
@@ -41,7 +53,7 @@ public class DataSourceConnector {
         System.out.println("---- Get or create the 'temperature' cache ----");
         checkConnection();
 
-        return null;
+        return remoteCacheManager.getCache("temperature");
     }
     public RemoteCache<String, LocationWeather> getWeatherCache() {
         System.out.println("---- Get or create the 'weather' cache ----");

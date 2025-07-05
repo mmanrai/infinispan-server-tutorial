@@ -28,8 +28,12 @@ public class TemperatureLoader implements WeatherLoader<Float> {
    public Float getForLocation(String location) {
       // STEP Put and Read temperature data
       // FOLLOW UP STEP Making the data expire (lifespan)
-
-      return fetchTemperature();
+      Float temperature = cache.get(location);
+      if (temperature == null) {
+         temperature = fetchTemperature();
+         cache.put(location, temperature, 20, TimeUnit.SECONDS);
+      }
+      return temperature;
    }
 
    private Float fetchTemperature() {
